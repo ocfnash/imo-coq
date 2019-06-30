@@ -153,9 +153,10 @@ Section Question.
     pose (Hk := (k_spec_5 _ _ _ _ Hr Hc Hm Hn)). fold k in Hk. omega.
   Qed.
 
-  Theorem PHP_2D : r <> 0 -> c <> 0 -> exists x v w j,
-    In v (rows M) /\
+  Theorem php_2d : r <> 0 -> c <> 0 -> exists x v w i j,
+    nth_error (rows M) i = Some v /\
     nth_error (columns M) j = Some w /\
+    nth_error w i = Some x /\
     nth_error v j = Some x /\
     k <= count_occ Nat.eq_dec v x /\
     k <= count_occ Nat.eq_dec w x.
@@ -163,8 +164,10 @@ Section Question.
     intros Hr Hc.
     apply either_bad_count in Hr; [| assumption].
     unfold c in Hr. apply matrix_filter_by_row_and_column_spec_0 in Hr.
-    destruct Hr as [x [v [w [i [j Hxvw]]]]].
-    exists x. exists v. exists w. exists j.
+    destruct Hr as [x [v [w [j [Hv [Hj [Hj' Hvwx]]]]]]].
+    apply In_nth_error in Hv. destruct Hv as [i Hi].
+    assert (Hij : nth_error w i = Some x). { rewrite (matrix_indexing_commutes M i j Hj Hi) in Hj'. assumption. }
+    exists x. exists v. exists w. exists i. exists j.
     repeat (rewrite <- Nat.leb_le).
     fold (is_good v x). fold (is_good w x).
     rewrite <- Bool.andb_true_iff.

@@ -169,6 +169,16 @@ Section Matrices.
       + discriminate.
   Qed.
 
+  Lemma matrix_indexing_commutes : forall {r: nat} (M : matrix r) (v w : list A) (i j : nat),
+    nth_error (columns M) j = Some w -> nth_error (rows M) i = Some v -> nth_error v j = nth_error w i.
+  Proof.
+    intros r M v w i j Hj Hi.
+    assert (H  : ijth_error  M i j = nth_error w i). { unfold ijth_error.  rewrite Hj. reflexivity. }
+    assert (H' : ijth_error' M i j = nth_error v j). { unfold ijth_error'. rewrite Hi. reflexivity. }
+    rewrite <- H. rewrite <- H'.
+    rewrite ijth_error_transposes. reflexivity.
+  Qed.
+
   Definition flatten_columnwise {r : nat} (M : matrix r) : list A :=
     concat (columns M).
 
@@ -453,9 +463,8 @@ Section MatrixExtra.
 
   Lemma matrix_by_row_and_column_spec_7 : forall {r : nat} (M : matrix A r) (v w : list A) (x : A) (i j : nat),
     ijth_error (matrix_by_row_and_column M) i j = Some (v, w, x) ->
-      In v (rows M) /\ (* TODO strengthen to: `nth_error (rows M) i = Some v`. We don't actually need this but would be nice. *)
+      In v (rows M) /\
       nth_error (columns M) j = Some w /\
-      nth_error w i = Some x /\
       nth_error v j = Some x.
   Proof.
     intros r M v w x i j H.
@@ -482,34 +491,29 @@ Section MatrixExtra.
     - apply nth_error_In in H.
       apply map_nth_error with (f := (map snd)) in Hj.
       rewrite matrix_by_row_and_column_spec_6 in Hj. rewrite <- Hw in Hj. assumption.
-    - rewrite Hw.
-      assert (Hx : x = snd (v, w, x)). { auto. } rewrite Hx.
-      apply map_nth_error. assumption.
     - rewrite Hv.
       assert (Hx : x = snd (v, w, x)). { auto. } rewrite Hx.
       apply map_nth_error. assumption.
   Qed.
 
   Lemma matrix_by_row_and_column_spec_8 : forall {r : nat} (M : matrix A r) (v w : list A) (x : A),
-    matrix_in (v, w, x) (matrix_by_row_and_column M) -> exists (i j : nat),
+    matrix_in (v, w, x) (matrix_by_row_and_column M) -> exists (j : nat),
       In v (rows M) /\
       nth_error (columns M) j = Some w /\
-      nth_error w i = Some x /\
       nth_error v j = Some x.
   Proof.
     intros r M v w x H.
     rewrite ijth_error_matrix_in in H. destruct H as [i [j Hij]].
-    exists i. exists j.
+    exists j.
     apply matrix_by_row_and_column_spec_7 in Hij.
     assumption.
   Qed.
 
   Lemma matrix_filter_by_row_and_column_spec_0 : forall (f : (list A) * (list A) * A -> bool) {r : nat} (M : matrix A r),
     length (filter_columnwise f (matrix_by_row_and_column M)) < r * (col_count M) ->
-    exists x v w i j,
+    exists x v w j,
       In v (rows M) /\
       nth_error (columns M) j = Some w /\
-      nth_error w i = Some x /\
       nth_error v j = Some x /\
       f (v, w, x) = false.
   Proof.
@@ -519,8 +523,8 @@ Section MatrixExtra.
     apply list_filter_exhaustive' in Hf.
     destruct Hf as [[[v w] x] [Hxvw Hxvw']].
     rewrite flatten_columnwise_spec_0 in Hxvw.
-    apply matrix_by_row_and_column_spec_8 in Hxvw. destruct Hxvw as [i [j H]].
-    exists x. exists v. exists w. exists i. exists j. firstorder.
+    apply matrix_by_row_and_column_spec_8 in Hxvw. destruct Hxvw as [j H].
+    exists x. exists v. exists w. exists j. firstorder.
   Qed.
 
 End MatrixExtra.
