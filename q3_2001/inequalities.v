@@ -139,14 +139,14 @@ Section Inequalities.
     assumption.
   Qed.
 
-  Lemma k_spec_5 : r * ((n-1) * (k'-1)) + c * ((m-1) * (k'-1)) < r*c. (* TODO: Can we swap the order of the two terms added here for consistency with rest of this file? *)
+  Lemma k_spec_5 : c * ((m-1) * (k'-1)) + r * ((n-1) * (k'-1)) < r*c.
   Proof.
     destruct Hmn_spec as [[Hm' Hn'] | Hmn].
     - subst. simpl. repeat (rewrite -> Nat.mul_0_r). simpl. apply Nat.mul_pos_pos; omega.
     - rewrite -> Nat.mul_assoc. rewrite -> Nat.mul_assoc.
       rewrite <- Nat.mul_add_distr_r.
       rewrite <- ceil_spec_1.
-      + pose (H := k_spec_4 Hmn). pose (H' := k_spec_0). rewrite plus_comm. omega.
+      + pose (H := k_spec_4 Hmn). pose (H' := k_spec_0). omega.
       + unfold not. intros contra. destruct (plus_is_O _ _ contra) as [contra' _].
         rewrite -> contra' in contra. simpl in contra.
         destruct (mult_is_O _ _ contra) as [contra'' | contra''];
